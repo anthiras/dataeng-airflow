@@ -2,8 +2,8 @@ from datetime import datetime, timedelta
 import os
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from operators import (StageToRedshiftOperator, LoadFactOperator,
-                       LoadDimensionOperator, DataQualityOperator)
+from airflow.operators import (StageToRedshiftOperator, LoadFactOperator,
+                               LoadDimensionOperator, DataQualityOperator)
 from helpers import SqlQueries
 
 # AWS_KEY = os.environ.get('AWS_KEY')
@@ -12,7 +12,6 @@ from helpers import SqlQueries
 default_args = {
     'owner': 'udacity',
     'start_date': datetime(2019, 1, 12),
-    'end_date': datetime(2019, 1, 14),
     'depends_on_past': False,
     'email_on_failure': False,
     'email_on_retry': False,
@@ -57,22 +56,26 @@ load_songplays_table = LoadFactOperator(
 
 load_user_dimension_table = LoadDimensionOperator(
     task_id='Load_user_dim_table',
-    dag=dag
+    dag=dag,
+    append=True
 )
 
 load_song_dimension_table = LoadDimensionOperator(
     task_id='Load_song_dim_table',
-    dag=dag
+    dag=dag,
+    append=True
 )
 
 load_artist_dimension_table = LoadDimensionOperator(
     task_id='Load_artist_dim_table',
-    dag=dag
+    dag=dag,
+    append=True
 )
 
 load_time_dimension_table = LoadDimensionOperator(
     task_id='Load_time_dim_table',
-    dag=dag
+    dag=dag,
+    append=True
 )
 
 run_quality_checks = DataQualityOperator(
