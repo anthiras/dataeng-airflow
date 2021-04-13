@@ -4,6 +4,18 @@ from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
 class StageToRedshiftOperator(BaseOperator):
+    """
+    Stage data from S3 into Redshift staging tables.
+
+    Args:
+        redshift_conn_id: Redshift connection ID
+        aws_credentials_id: AWS credentials ID
+        table: Staging table name
+        s3_bucket: S3 bucket to fetch data from
+        s3_key: S3 key for the object/object prefix to fetch, which may contain templated context parameters, e.g. year/month
+        json: Optional json_option to use for the Redshift COPY command, default is 'auto'
+        region: The AWS region
+    """
     ui_color = '#358140'
     template_fields = ("s3_key",)
     copy_sql = """
