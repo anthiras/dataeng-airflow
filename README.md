@@ -8,15 +8,7 @@ The project involves an imaginary music streaming startup called Sparkify. Spark
 
 ## How to run
 
-Use docker-compose to run Airflow.
-
-First initialize the database:
-
-```
-docker-compose up airflow-init
-```
-
-Then start Airflow:
+Use docker-compose to run Airflow:
 
 ```
 docker-compose up
