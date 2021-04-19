@@ -20,13 +20,14 @@ default_args = {
     'catchup': False
 }
 
-dag = DAG('udac_example_dag',
+dag = DAG('sparkify_etl',
           default_args=default_args,
           description='Load and transform data in Redshift with Airflow',
-          schedule_interval='0 * * * *'
+          #schedule_interval='0 * * * *'
+          schedule_interval=None
         )
 
-start_operator = DummyOperator(task_id='Begin_execution',  dag=dag)
+start_operator = DummyOperator(task_id='Begin_execution', dag=dag)
 
 stage_events_to_redshift = StageToRedshiftOperator(
     task_id='Stage_events',
@@ -35,7 +36,7 @@ stage_events_to_redshift = StageToRedshiftOperator(
     aws_credentials_id='aws_credentials',
     table='staging_events',
     s3_bucket='udacity-dend',
-    s3_key='log_data/{execution_date.year}/{execution_date.month}',
+    s3_key='log_data',
     json='s3://udacity-dend/log_json_path.json'
 )
 
@@ -70,7 +71,7 @@ load_song_dimension_table = LoadDimensionOperator(
     task_id='Load_song_dim_table',
     dag=dag,
     redshift_conn_id='redshift',
-    dim_table='users',
+    dim_table='songs',
     sql_query=SqlQueries.song_table_insert,
     append=True
 )
@@ -79,7 +80,7 @@ load_artist_dimension_table = LoadDimensionOperator(
     task_id='Load_artist_dim_table',
     dag=dag,
     redshift_conn_id='redshift',
-    dim_table='users',
+    dim_table='artists',
     sql_query=SqlQueries.artist_table_insert,
     append=True
 )
@@ -88,14 +89,27 @@ load_time_dimension_table = LoadDimensionOperator(
     task_id='Load_time_dim_table',
     dag=dag,
     redshift_conn_id='redshift',
-    dim_table='users',
+    dim_table='time',
     sql_query=SqlQueries.time_table_insert,
     append=True
 )
 
 run_quality_checks = DataQualityOperator(
     task_id='Run_data_quality_checks',
-    dag=dag
+    dag=dag,
+    redshift_conn_id='redshift',
+    quality_checks=[
+        # Verify all tables contain data
+        ("SELECT COUNT(*) > 0 FROM songplays", 1),
+        ("SELECT COUNT(*) > 0 FROM users", 1),
+        ("SELECT COUNT(*) > 0 FROM songs", 1),
+        ("SELECT COUNT(*) > 0 FROM artists", 1),
+        ("SELECT COUNT(*) > 0 FROM time", 1),
+        # Check a few selected columns for null values
+        ("SELECT COUNT(*) FROM songs WHERE title IS NULL", 0),
+        ("SELECT COUNT(*) FROM artists WHERE name IS NULL", 0),
+        ("SELECT COUNT(*) FROM time WHERE hour IS NULL", 0)
+    ]
 )
 
 end_operator = DummyOperator(task_id='Stop_execution',  dag=dag)

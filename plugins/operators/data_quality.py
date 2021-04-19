@@ -3,20 +3,30 @@ from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
 class DataQualityOperator(BaseOperator):
+    """
+    Perform data quality checks on Redshift tables using SQL queries.
 
+    Args:
+        redshift_conn_id: Redshift connection ID
+        quality_checks: List of quality checks. Each item in the list is a tuple of (SQL query string, expected result)
+    """
     ui_color = '#89DA59'
 
     @apply_defaults
     def __init__(self,
-                 # Define your operators params (with defaults) here
-                 # Example:
-                 # conn_id = your-connection-name
+                 redshift_conn_id='',
+                 quality_checks=[],
                  *args, **kwargs):
 
         super(DataQualityOperator, self).__init__(*args, **kwargs)
-        # Map params here
-        # Example:
-        # self.conn_id = conn_id
+        self.redshift_conn_id = redshift_conn_id
+        self.quality_checks = quality_checks
 
     def execute(self, context):
-        self.log.info('DataQualityOperator not implemented yet')
+        redshift = PostgresHook(postgres_conn_id=self.redshift_conn_id)
+
+        for query, expected_result in self.quality_checks:
+            records = redshift.get_records(query)[0]
+            if records != expected_result:
+                raise ValueError(f"The following data quality check failed: {query}")
+            self.log.info(f"Data quality check passed: {query}")
