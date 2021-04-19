@@ -23,8 +23,7 @@ default_args = {
 dag = DAG('sparkify_etl',
           default_args=default_args,
           description='Load and transform data in Redshift with Airflow',
-          #schedule_interval='0 * * * *'
-          schedule_interval=None
+          schedule_interval='0 * * * *'
         )
 
 start_operator = DummyOperator(task_id='Begin_execution', dag=dag)
@@ -100,11 +99,11 @@ run_quality_checks = DataQualityOperator(
     redshift_conn_id='redshift',
     quality_checks=[
         # Verify all tables contain data
-        ("SELECT COUNT(*) > 0 FROM songplays", 1),
-        ("SELECT COUNT(*) > 0 FROM users", 1),
-        ("SELECT COUNT(*) > 0 FROM songs", 1),
-        ("SELECT COUNT(*) > 0 FROM artists", 1),
-        ("SELECT COUNT(*) > 0 FROM time", 1),
+        ("SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END FROM songplays", 1),
+        ("SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END FROM users", 1),
+        ("SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END FROM songs", 1),
+        ("SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END FROM artists", 1),
+        ("SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END FROM time", 1),
         # Check a few selected columns for null values
         ("SELECT COUNT(*) FROM songs WHERE title IS NULL", 0),
         ("SELECT COUNT(*) FROM artists WHERE name IS NULL", 0),

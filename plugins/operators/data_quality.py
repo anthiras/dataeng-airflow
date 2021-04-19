@@ -27,6 +27,6 @@ class DataQualityOperator(BaseOperator):
 
         for query, expected_result in self.quality_checks:
             records = redshift.get_records(query)[0]
-            if records != expected_result:
-                raise ValueError(f"The following data quality check failed: {query}")
-            self.log.info(f"Data quality check passed: {query}")
+            if records[0] != expected_result:
+                raise ValueError(f"The following data quality check failed with result {expected_result}, expected result {expected_result}: {query}")
+            self.log.info(f"The following data quality check passed with expected result {expected_result}: {query}")
